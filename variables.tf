@@ -13,7 +13,7 @@ variable "instance_type" {
 variable "ssh_key_name" {
   description = "Name of the existing AWS Key Pair (SSH Key)"
   type        = string
-  default     = "buzzly-key" #แก้ไขชื่อ Key Pair
+  default     = "buzzly-kay" #แก้ไขชื่อ Key Pair
 }
 
 variable "github_repo_url" {
