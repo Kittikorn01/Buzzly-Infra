@@ -6,18 +6,40 @@
 
 ## 🚀 Quick Start (สำหรับอาจารย์ / ผู้ตรวจงาน)
 
-หากต้องการให้ระบบทำงานได้ทันทีโดยไม่ต้องตั้งค่า Database เอง:
+> **ไม่ต้องสมัคร Supabase เอง!** ผมเตรียมไฟล์ `terraform.tfvars` ที่มี Database credentials ไว้ให้แล้วครับ
 
-1. **ตั้งค่า AWS CLI:** รัน `aws configure` (ใส่ Access Key ที่มีสิทธิ์สร้าง EC2)
-2. **Setup Variables:** 
-   - `cp terraform.tfvars.example terraform.tfvars`
-   - ใส่ข้อมูลใน `terraform.tfvars` (**ใช้ค่าโครงการ Supabase ที่ผมเตรียมไว้ให้แล้วได้เลยครับ**)
-3. **Deploy:**
+### สิ่งที่คุณต้องทำ:
+
+1. **ติดตั้ง Tools:** ติดตั้ง [AWS CLI](https://aws.amazon.com/cli/) และ [Terraform](https://developer.hashicorp.com/terraform/install)
+2. **Login AWS:** รัน `aws configure` (ใส่ Access Key ของคุณ)
+3. **สร้าง SSH Key Pair:** สร้างบน [AWS EC2 Console](https://console.aws.amazon.com/ec2/) ชื่อ `buzzly-key` (ดูขั้นตอนด้านล่าง)
+4. **วางไฟล์ที่ผมให้:**
+   - เอาไฟล์ **`terraform.tfvars`** ที่ผมแนบมาพร้อมงาน → วางในโฟลเดอร์นี้ (ถัดจาก `main.tf`)
+   - เปิดไฟล์ `terraform.tfvars` แก้ **เฉพาะบรรทัด `ssh_key_name`** ให้ตรงกับชื่อ Key Pair ที่คุณสร้างไว้
+   - ⚠️ **ค่าอื่นๆ ไม่ต้องแก้** (Supabase URL, Key ต่างๆ ผมใส่ไว้ให้หมดแล้ว)
+5. **Deploy:**
    ```bash
    terraform init
    terraform apply -auto-approve
    ```
-4. **Done:** รอประมาณ 3-5 นาที ให้ระบบรัน Docker จนเสร็จ แล้วเปิด `web_url` ที่แสดงใน Output ครับ! 🎉
+6. **Done:** รอประมาณ 3-5 นาที ให้ระบบรัน Docker จนเสร็จ แล้วเปิด `web_url` ที่แสดงใน Output ครับ! 🎉
+
+### 📄 ไฟล์ที่ผมแนบมาให้:
+
+| ไฟล์ | คำอธิบาย | ต้องแก้ค่าไหม? |
+|------|----------|----------------|
+| `terraform.tfvars` | ไฟล์ตั้งค่าหลัก (มี Key ของ Supabase + URL ของ GitHub Repo) | ✏️ แก้เฉพาะ `ssh_key_name` ให้ตรงกับ Key Pair ของคุณ |
+
+### 📁 ไฟล์ .tf ต่างๆ ในโปรเจกต์ (ไม่ต้องแก้!):
+
+| ไฟล์ | หน้าที่ | ต้องแก้ไหม? |
+|------|---------|-------------|
+| `main.tf` | สร้าง Security Group + EC2 Instance | ❌ ไม่ต้องแก้ |
+| `variables.tf` | ประกาศตัวแปรที่ใช้ในระบบ | ❌ ไม่ต้องแก้ |
+| `provider.tf` | กำหนด AWS Provider + Region | ❌ ไม่ต้องแก้ |
+| `outputs.tf` | แสดง IP, URL หลัง deploy | ❌ ไม่ต้องแก้ |
+| `scripts/setup.tftpl` | สคริปต์อัตโนมัติที่รันบน EC2 | ❌ ไม่ต้องแก้ |
+| `terraform.tfvars` | **ค่าจริงที่ผมให้มา** | ✏️ แก้เฉพาะ `ssh_key_name` |
 
 ---
 
@@ -44,8 +66,10 @@
 | # | รายการ | รายละเอียด |
 |---|--------|-----------|
 | 1 | **AWS Account** | สมัครที่ [aws.amazon.com](https://aws.amazon.com/) (Free Tier ใช้ได้ 12 เดือน) |
-| 2 | **Buzzly App Repo (Repo 2)** | โค้ดของ Buzzly Web ต้อง push ขึ้น GitHub เป็น **Public repo** แล้ว |
-| 3 | **Supabase Project** | สร้างที่ [supabase.com](https://supabase.com/) แล้วเตรียม credentials ไว้ |
+| 2 | **AWS CLI + Terraform** | ติดตั้งในเครื่อง (ดูวิธีด้านล่าง) |
+| 3 | **SSH Key Pair** | สร้างบน AWS Console ใน Region `ap-southeast-1` |
+
+> 💡 **ไม่ต้องสมัคร Supabase!** ผมเตรียม Database credentials ไว้ให้ในไฟล์ `terraform.tfvars` ที่แนบมาพร้อมงานแล้วครับ
 
 ---
 
@@ -193,21 +217,6 @@ chmod 400 ~/.ssh/buzzly-key.pem
 
 ---
 
-## 🟢 เตรียม Supabase Credentials
-
-1. เข้า [Supabase Dashboard](https://supabase.com/dashboard)
-2. เลือก Project ของคุณ (หรือสร้างใหม่)
-3. ไปที่ **Settings** → **API**
-4. จดค่าเหล่านี้ไว้:
-
-| ค่า | หาจากตรงไหน |
-|-----|-------------|
-| `SUPABASE_URL` | Project URL (เช่น `https://xxxxx.supabase.co`) |
-| `SUPABASE_ANON_KEY` | Project API Keys → `anon` `public` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Project API Keys → `service_role` (กด Reveal เพื่อดู) |
-
----
-
 ## 📂 Clone Repo นี้ & ตั้งค่า
 
 ### Step 1: Clone Repository
@@ -217,31 +226,39 @@ git clone https://github.com/Kittikorn01/Buzzly-Infra.git
 cd Buzzly-Infra
 ```
 
-### Step 2: สร้างไฟล์ตั้งค่า
+### Step 2: วางไฟล์ `terraform.tfvars` ที่ผมให้มา
 
-```bash
-cp terraform.tfvars.example terraform.tfvars
+เอาไฟล์ **`terraform.tfvars`** ที่ผมแนบมาพร้อมกับงาน วางในโฟลเดอร์ `Buzzly-Infra/` (อยู่ระดับเดียวกับ `main.tf`)
+
+```
+Buzzly-Infra/
+├── main.tf
+├── variables.tf
+├── provider.tf
+├── outputs.tf
+├── terraform.tfvars          ← 📄 วางไฟล์ที่ผมให้ตรงนี้!
+├── terraform.tfvars.example
+└── scripts/
+    └── setup.tftpl
 ```
 
-### Step 3: แก้ไข `terraform.tfvars`
+### Step 3: แก้ไข `terraform.tfvars` (แก้แค่ 1 ค่า!)
 
-เปิดไฟล์ `terraform.tfvars` ด้วย editor ที่ถนัด แล้วใส่ค่าของจริง:
+เปิดไฟล์ `terraform.tfvars` แล้วแก้ **เฉพาะบรรทัด `ssh_key_name`** ให้ตรงกับชื่อ Key Pair ที่คุณสร้างไว้บน AWS:
 
 ```hcl
-# 1. ชื่อ SSH Key Pair (ที่สร้างไว้ในขั้นตอนก่อนหน้า)
+# ✏️ แก้ตรงนี้! → ใส่ชื่อ Key Pair ที่คุณสร้างไว้บน AWS Console
 ssh_key_name    = "buzzly-key"
 
-# 2. URL ของ Buzzly App repo (Repo 2) - ต้องเป็น Public repo
-github_repo_url = "https://github.com/your-username/BuzzlyDev.git"
-
-# 3. Supabase Credentials
-supabase_url              = "https://your-project-id.supabase.co"
+# ❌ ด้านล่างนี้ ไม่ต้องแก้อะไรเลย! (ผมใส่ค่าไว้ให้หมดแล้ว)
+github_repo_url = "https://github.com/Kittikorn01/Buzzly-DevOps.git"
+supabase_url              = "https://xxxxx.supabase.co"
 supabase_anon_key         = "eyJhbGci..."
 supabase_service_role_key = "eyJhbGci..."
 ```
 
-> ⚠️ **สำคัญ:** ไฟล์ `terraform.tfvars` อยู่ใน `.gitignore` แล้ว จะไม่ถูก push ขึ้น GitHub  
-> ห้าม commit ไฟล์นี้เด็ดขาด เพราะมี credentials สำคัญ!
+> ⚠️ **หมายเหตุ:** ไฟล์ `terraform.tfvars` อยู่ใน `.gitignore` แล้ว จะไม่ถูก push ขึ้น GitHub
+> เพราะมี credentials สำคัญของ Database อยู่ ผมจึงแนบไฟล์นี้มาให้แยกต่างหากแทนที่จะ commit ขึ้น repo
 
 ---
 
