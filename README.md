@@ -4,7 +4,25 @@
 
 ---
 
+## 🚀 Quick Start (สำหรับอาจารย์ / ผู้ตรวจงาน)
+
+หากต้องการให้ระบบทำงานได้ทันทีโดยไม่ต้องตั้งค่า Database เอง:
+
+1. **ตั้งค่า AWS CLI:** รัน `aws configure` (ใส่ Access Key ที่มีสิทธิ์สร้าง EC2)
+2. **Setup Variables:** 
+   - `cp terraform.tfvars.example terraform.tfvars`
+   - ใส่ข้อมูลใน `terraform.tfvars` (**ใช้ค่าโครงการ Supabase ที่ผมเตรียมไว้ให้แล้วได้เลยครับ**)
+3. **Deploy:**
+   ```bash
+   terraform init
+   terraform apply -auto-approve
+   ```
+4. **Done:** รอประมาณ 3-5 นาที ให้ระบบรัน Docker จนเสร็จ แล้วเปิด `web_url` ที่แสดงใน Output ครับ! 🎉
+
+---
+
 ## 📖 สารบัญ
+...
 
 1. [สิ่งที่ต้องเตรียมก่อน (Prerequisites)](#-สิ่งที่ต้องเตรียมก่อน-prerequisites)
 2. [ติดตั้ง Tools ที่จำเป็น](#-ติดตั้ง-tools-ที่จำเป็น)
