@@ -1,0 +1,14 @@
+# AWS Configuration
+# aws_region     = "ap-southeast-7"
+# instance_type  = "t3.micro"
+
+# 1. SSH Key Pair Name (จากหน้า AWS EC2 Console)
+ssh_key_name    = "your-key-name-here"
+
+# 2. GitHub Repository URL (Repo 2)
+github_repo_url = "https://github.com/your-username/BuzzlyDev.git"
+
+# 3. Supabase Cloud Credentials
+supabase_url              = "https://your-project-id.supabase.co"
+supabase_anon_key         = "your-anon-key-here"
+supabase_service_role_key = "your-service-role-key-here"

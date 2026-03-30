@@ -1,0 +1,54 @@
+#!/bin/bash
+# ---------------------------------------------------------
+# Buzzly Auto-Deployment Script (EC2 User Data)
+# ---------------------------------------------------------
+set -e
+set -x  # ดูความคืบหน้าแบบละเอียดใน Log
+
+# 0. สร้างแรมสำรอง (Swap 4GB) เพื่อกันเครื่องค้างตอน Build
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+
+# 1. Update and Install Prerequisites
+sudo apt-get update -y
+sudo apt-get install -y ca-certificates curl gnupg git
+
+# 2. Install Docker via Official Script
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# 3. Clone the Repository (Repo 2)
+cd /home/ubuntu
+git clone ${github_repo_url} Buzzly-App
+cd Buzzly-App
+
+# 4. Configure Environment Variables
+# ค้าหา IP ตัวเอง (สำหรับหน้าเว็บ)
+TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+PUBLIC_IP=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -s http://169.254.169.254/latest/meta-data/public-ipv4)
+
+# Frontend .env (ตัวแก้ใหม่ที่ IP ตรง)
+cat > .env <<EOF
+VITE_SUPABASE_URL=${supabase_url}
+VITE_SUPABASE_PUBLISHABLE_KEY=${supabase_anon_key}
+VITE_BACKEND_API_URL=http://$PUBLIC_IP:3001
+EOF
+
+# Mock API .env (ตัวที่หายไป - ต้องคืนชีพให้มันครับ!)
+cat > mock-api/.env <<EOF
+SUPABASE_URL=${supabase_url}
+SUPABASE_SERVICE_ROLE_KEY=${supabase_service_role_key}
+EXTERNAL_API_BASE_URL=http://localhost:3001
+EOF
+
+# 5. Start the Application via Docker Compose
+export NODE_OPTIONS="--max-old-space-size=3072"
+sudo docker compose up -d --build
+
+
+
+
+echo "✅✅ DEPLOYMENT COMPLETE! ✅✅"
